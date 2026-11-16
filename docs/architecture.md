@@ -17,7 +17,7 @@ for an e-commerce recommendation system.
 | Data Lineage | SHA-256 manifests | Implemented |
 | Model Training | TruncatedSVD | Implemented |
 | Experiment Tracking | MLflow | Implemented |
-| Orchestration | Prefect | Pending verification |
+| Orchestration | Prefect 3.9.3 | Implemented and successfully executed |
 | Data Warehouse | DuckDB / SQL | Proposed |
 | BI Dashboard | Looker / Power BI | Optional |
 
