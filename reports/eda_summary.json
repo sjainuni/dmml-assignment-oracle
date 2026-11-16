@@ -1,0 +1,12 @@
+{
+  "events": 2755651,
+  "visitors": 1407580,
+  "items": 235061,
+  "unique_user_item_pairs": 2145179,
+  "matrix_sparsity": 0.9999935164947027,
+  "event_distribution": {
+    "view": 2664219,
+    "addtocart": 68975,
+    "transaction": 22457
+  }
+}

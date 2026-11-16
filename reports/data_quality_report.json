@@ -1,0 +1,18 @@
+{
+  "file": "data/raw/events.csv",
+  "rows": 2756101,
+  "columns": [
+    "timestamp",
+    "visitorid",
+    "event",
+    "itemid",
+    "transactionid"
+  ],
+  "missing_visitorid": 0,
+  "missing_itemid": 0,
+  "duplicate_rows": 460,
+  "unknown_event_types": [],
+  "invalid_timestamp": 0,
+  "transactionid_null_expected_for_non_transactions": true,
+  "quality_status": "PASS"
+}
