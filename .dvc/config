@@ -1,0 +1,8 @@
+[core]
+    remote = oci-dvc
+['remote "oci-dvc"']
+    url = s3://recomart-dmml-data/dvc-store
+    endpointurl = https://bmyxec10ufou.compat.objectstorage.ap-mumbai-1.oraclecloud.com
+    region = ap-mumbai-1
+    use_ssl = true
+    profile = dvc-oci
