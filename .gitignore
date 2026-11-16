@@ -26,7 +26,6 @@ dataset/
 reports/*.pdf
 reports/*.png
 reports/*.jpg
-reports/screenshots/
 data/lake/
 
 # Model and experiment outputs
@@ -36,3 +35,9 @@ data/lake/
 *.model
 *.db
 mlruns/
+
+# Local analytical databases
+database/*.duckdb
+database/*.db
+database/*.sqlite
+*.duckdb
