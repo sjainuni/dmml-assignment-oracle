@@ -1,0 +1,38 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.kaggle/
+.oci/
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/features/*
+!data/features/.gitkeep
+models/*
+!models/.gitkeep
+logs/*
+!logs/.gitkeep
+mlruns/
+.prefect/
+
+# Raw and downloaded datasets
+dataset/
+*.csv
+*.zip
+
+# Generated reports and evidence
+reports/*.pdf
+reports/*.png
+reports/*.jpg
+reports/screenshots/
+data/lake/
+
+# Model and experiment outputs
+*.joblib
+*.pkl
+*.parquet
+*.model
+*.db
+mlruns/

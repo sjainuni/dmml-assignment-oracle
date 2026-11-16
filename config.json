@@ -1,0 +1,19 @@
+{
+  "dataset_slug": "retailrocket/ecommerce-dataset",
+  "region": "ap-mumbai-1",
+  "event_weights": {
+    "view": 1.0,
+    "addtocart": 3.0,
+    "transaction": 5.0
+  },
+  "training": {
+    "max_interactions": 500000,
+    "test_fraction": 0.2,
+    "random_state": 42,
+    "svd_components": 32,
+    "top_k": 10
+  },
+  "chunksize": 500000,
+  "min_user_events": 2,
+  "min_item_events": 2
+}
