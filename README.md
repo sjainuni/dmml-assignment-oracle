@@ -1,369 +1,488 @@
-# RecoMart — End-to-End Data Management Pipeline
-### OCI Object Storage + Retailrocket + DVC + Prefect + DuckDB
+# RecoMart -- End-to-End Data Management Pipeline for a Recommendation System
 
-**Course:** Data Management for Machine Learning (S1-26_DSEZG529)  
-**Submission date:** 22 November 2026  
-**Student:** Sandeep Kumar Jain | **ID:** 2025NS04132  
-**Team:** Five-member team (complete contribution table in the submission report)
+**Course:** Data Mining & Machine Learning (DMML)\
+**Project:** RecoMart\
+**Team:** Group 1\
+**Repository:** `dmml-assignment-oracle`
 
-## Project Overview
+RecoMart is an end-to-end data management and recommendation-system
+project built using the RetailRocket e-commerce events dataset. The
+project demonstrates data ingestion, validation, preparation,
+exploratory analysis, feature engineering, data/version lineage, model
+training and evaluation, experiment tracking, workflow orchestration,
+cloud object storage, and analytical warehousing.
 
-RecoMart implements an end-to-end data management pipeline for an
-e-commerce recommendation system using the Retailrocket dataset.
+This README is intended for the **Source Code** folder and the
+`group1.zip` source-code archive.
 
-The implementation covers:
-- Data ingestion and validation.
-- Local data lake and OCI Object Storage.
-- Data preparation and exploratory data analysis.
-- Feature engineering and a custom feature registry.
-- Dataset versioning using DVC.
-- Data lineage using SHA-256 manifests.
-- Collaborative filtering using TruncatedSVD.
-- Experiment tracking using MLflow.
-- Pipeline orchestration using Prefect.
-- Analytical warehouse using DuckDB.
+------------------------------------------------------------------------
 
-**Execution scope:** Data processing, model training, DuckDB and
-Prefect orchestration execute in the local Linux environment.
-OCI Object Storage provides cloud-based data and artifact storage.
-DVC uses OCI's S3-compatible API for remote dataset versioning.
-This project does not claim deployment of the processing pipeline
-on OCI Compute.
+## 1. Project overview
 
-## Architecture
+The pipeline processes RetailRocket event data and builds an
+interaction-based recommendation model.
 
-Retailrocket CSV datasets
-    |
-    v
-Python ingestion and validation
-    |
-    v
-OCI Object Storage
-    |
-    v
-Data preparation and EDA
-    |
-    v
-Feature engineering and feature registry
-    |
-    +-------------------------+
-    |                         |
-    v                         v
-DuckDB warehouse        TruncatedSVD model
-                              |
-                              v
-                         MLflow tracking
+The main stages are:
 
-DVC manages dataset versions:
-GitHub stores DVC metadata and OCI Object Storage stores
-the versioned dataset objects.
+1.  **Ingestion** -- load the source event and item metadata files.
+2.  **Data validation** -- check required fields, missing identifiers,
+    duplicates, event labels, and timestamp validity.
+3.  **Preparation** -- clean and prepare interaction data for downstream
+    analysis and modelling.
+4.  **Catalog processing** -- process item metadata and category
+    information.
+5.  **Exploratory data analysis (EDA)** -- examine event distributions,
+    user activity, item popularity, and time-based patterns.
+6.  **Feature engineering** -- generate user, item, and user-item
+    features and maintain a feature registry.
+7.  **Versioning and lineage** -- record dataset and pipeline artefacts
+    to support traceability.
+8.  **Model training and evaluation** -- train a TruncatedSVD-based
+    recommendation model and calculate ranking and reconstruction
+    metrics.
+9.  **Experiment tracking** -- record model parameters and metrics with
+    MLflow.
+10. **Workflow orchestration** -- organise pipeline execution with
+    Prefect.
+11. **Analytical warehouse** -- load prepared data and feature tables
+    into DuckDB.
+12. **Cloud object storage** -- use Oracle Cloud Infrastructure (OCI)
+    Object Storage for project data and artefacts.
 
-Prefect orchestrates the end-to-end processing workflow.
+### Model configuration
 
-See `docs/architecture.md` for details.
+The recommendation model uses **TruncatedSVD with 32 components**. The
+interaction matrix uses event weights:
 
-## Dataset
+  Event type      Weight
+  ------------- --------
+  View                 1
+  Add to cart          3
+  Transaction          5
 
-Kaggle dataset:
-https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset
+These weights give stronger influence to higher-intent interactions.
 
-Source files:
-- `events.csv`
-- `item_properties_part1.csv`
-- `item_properties_part2.csv`
-- `category_tree.csv`
+### Recorded evaluation results
 
-`transactionid` is naturally null for non-transaction events.
-It is not treated as a missing user/item key.
+The final recorded model run is identified by:
 
-Retailrocket provides implicit feedback (`view`, `addtocart`,
-`transaction`), not explicit 1–5 ratings. The project therefore
-uses event-strength weights documented in `config.json` and
-evaluates ranking rather than inventing ratings.
+`d96e8139d6aa4a0fa71dfe894c463124`
 
-## 1. Environment Setup (Linux)
+The metrics recorded for that run are:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+  Metric                  Recorded value
+  --------------------- ----------------
+  Precision@10                 0.0007024
+  Recall@10                    0.0070241
+  NDCG@10                      0.0043398
+  Reconstruction RMSE          0.0024734
+
+These are the results of the project baseline and should be interpreted
+in the context of the dataset, candidate set, and evaluation approach.
+They should not be represented as production-level recommendation
+performance.
+
+------------------------------------------------------------------------
+
+## 2. Technology stack
+
+-   **Python** -- pipeline implementation and model development
+-   **Pandas / NumPy / SciPy / scikit-learn** -- data processing and
+    machine learning
+-   **DuckDB** -- analytical warehouse
+-   **DVC** -- data and artefact versioning
+-   **MLflow** -- experiment tracking
+-   **Prefect** -- workflow orchestration
+-   **Oracle Cloud Infrastructure (OCI) Object Storage** -- cloud object
+    storage
+-   **DBeaver** -- optional graphical interface for inspecting the
+    DuckDB database
+
+The pipeline, Prefect server, MLflow tracking UI, and DuckDB warehouse
+are run locally in the demonstrated setup. OCI Object Storage is the
+cloud storage component.
+
+------------------------------------------------------------------------
+
+## 3. Project structure
+
+The source archive should preserve the project-relative structure. The
+following is a guide to the main directories and files; optional files
+may differ between packaged versions.
+
+``` text
+RecoMart_DMML_OCI/
+├── src/                         # Pipeline modules and model implementation
+├── scripts/                     # Entry-point and utility scripts
+├── sql/                         # Warehouse schema and SQL
+├── data/
+│   └── features/                 # Feature registry and feature metadata
+├── reports/                      # Supporting reports, metrics, figures, screenshots
+├── models/                       # Trained model artefact, if included
+├── database/                     # DuckDB warehouse, if included
+├── docs/                         # Supporting project documentation, if included
+├── .dvc/                         # DVC metadata (do not include credentials)
+├── .dvcignore
+├── .gitignore
+├── dvc.yaml                      # If present in the packaged project
+├── requirements.txt
+├── README.md
+└── ...
 ```
 
-Install DVC with S3-compatible storage support:
+### Important directories
 
-```bash
-python -m pip install "dvc[s3]>=3,<4"
-```
+  -----------------------------------------------------------------------
+  Directory                           Purpose
+  ----------------------------------- -----------------------------------
+  `src/`                              Reusable Python modules for
+                                      ingestion, validation, preparation,
+                                      EDA, features, versioning,
+                                      training, orchestration, storage,
+                                      and warehouse operations
 
-## 2. Dataset Setup
+  `scripts/`                          Commands and helper scripts for
+                                      running the pipeline, reports,
+                                      periodic processing, and data
+                                      utilities
 
-The project uses the four original Retailrocket CSV files.
+  `sql/`                              SQL schema and warehouse-related
+                                      SQL
 
-For Kaggle download:
+  `data/features/`                    Feature registry metadata
 
-```bash
-pip install kaggle
-mkdir -p ~/.config/kaggle
-chmod 600 ~/.config/kaggle/kaggle.json
-python scripts/download_kaggle.py
-```
+  `reports/`                          Data-quality evidence, EDA outputs,
+                                      metrics, manifests, plots, and
+                                      screenshots
 
-Keep Kaggle credentials outside the repository.
+  `models/`                           Trained recommendation model, when
+                                      distributed
 
-The DVC-managed source dataset directory is:
+  `database/`                         DuckDB database, when distributed
+  -----------------------------------------------------------------------
 
-```text
-data/dvc_raw/
-```
+------------------------------------------------------------------------
 
-The DVC metadata file is:
+## 4. Dataset
 
-```text
-data/dvc_raw.dvc
-```
+The project uses the **RetailRocket e-commerce events dataset**. The
+source files used in the project include:
 
-## 3. DVC Dataset Versioning
+-   `events.csv`
+-   `category_tree.csv`
+-   `item_properties_part1.csv`
+-   `item_properties_part2.csv`
 
-DVC tracks the four source CSV files. The DVC metadata is stored
-in GitHub, while the dataset objects are stored remotely in OCI
-Object Storage.
+The raw dataset is large. To keep the source ZIP and Git repository
+manageable, raw CSV files and generated large artefacts may be stored
+separately or managed through DVC rather than copied into the ZIP.
 
-Configured remote:
-- Remote name: `oci-dvc`
-- Bucket: `recomart-dmml-data`
-- Prefix: `dvc-store`
-- Region: `ap-mumbai-1`
-- Storage interface: OCI S3-compatible API
+### If the raw dataset is not included
 
-### Configure credentials
+1.  Obtain the same RetailRocket dataset version used for the project.
+2.  Place the source CSV files in the dataset location expected by the
+    project configuration.
+3.  Check the paths configured in the ingestion module or project
+    configuration before running the pipeline.
+4.  If the project is configured for DVC, configure access to the DVC
+    remote and retrieve the tracked data with:
 
-Create an OCI Customer Secret Key for the OCI user.
-
-Store the credentials locally in:
-
-```text
-~/.aws/credentials
-```
-
-Use this profile structure:
-
-```ini
-[dvc-oci]
-aws_access_key_id = YOUR_OCI_ACCESS_KEY
-aws_secret_access_key = YOUR_OCI_SECRET_KEY
-```
-
-The secret values must never be committed to GitHub.
-
-### Restore versioned datasets
-
-Clone the repository:
-
-```bash
-git clone git@github.com:sjainuni/dmml-assignment-oracle.git
-cd dmml-assignment-oracle
-```
-
-Restore the dataset:
-
-```bash
+``` bash
 dvc pull
 ```
 
-Verify:
+DVC remote access requires the appropriate credentials and
+configuration. Do not put OCI access keys, secret keys, authentication
+tokens, or private configuration files in the ZIP or public Git
+repository.
 
-```bash
-dvc status -c
-ls -lh data/dvc_raw/
+------------------------------------------------------------------------
+
+## 5. Setup
+
+### Requirements
+
+-   Linux, macOS, or Windows with a compatible Python environment
+-   Python version compatible with the packages in `requirements.txt`
+-   Git
+-   Access to the dataset
+-   DVC and OCI configuration if retrieving data from the configured
+    remote
+-   Optional: DuckDB CLI or DBeaver for inspecting the warehouse
+
+The project was developed in a Linux environment using Python 3.13.5.
+Package compatibility should be checked against the supplied
+`requirements.txt`.
+
+### Create and activate a virtual environment
+
+From the project root:
+
+``` bash
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-### Upload updated dataset versions
+On Windows PowerShell:
 
-After modifying tracked data:
-
-```bash
-dvc status
-dvc add data/dvc_raw
-dvc push
+``` powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 ```
 
-Commit the updated DVC metadata:
+### Install dependencies
 
-```bash
-git add data/dvc_raw.dvc data/.gitignore
-git commit -m "Update DVC dataset version"
-git push origin main
+``` bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-## 4. OCI Object Storage
+If a dependency is not listed in `requirements.txt`, install it only
+after checking the relevant module and the project's tested package
+versions.
 
-OCI Object Storage is configured in the Mumbai region (`ap-mumbai-1`).
+------------------------------------------------------------------------
 
-The project uses a private bucket:
+## 6. Run the pipeline
 
-```text
-recomart-dmml-data
+From the project root, activate the virtual environment and run:
+
+``` bash
+source .venv/bin/activate
+python scripts/run_pipeline.py
 ```
 
-The bucket stores raw, processed, feature and report artifacts,
-as well as the DVC remote objects.
+The script is the project pipeline entry point. Check its command-line
+options and the project configuration before running it if your local
+dataset or storage paths differ.
 
-The OCI CLI session authentication used for project uploads
-is separate from the Customer Secret Key used by DVC's
-S3-compatible remote.
+**Note:** The complete pipeline can take a substantial amount of time
+because it processes a large interaction dataset and builds the
+analytical and modelling artefacts. Do not start a fresh full run merely
+to view the saved reports or demonstration evidence.
 
-For native OCI uploads:
+------------------------------------------------------------------------
 
-```bash
-python scripts/oci_sync.py upload
-```
+## 7. Prefect -- workflow orchestration
 
-Never commit OCI private keys, session tokens or `.env` files.
+The project uses Prefect to organise pipeline stages into a workflow.
 
-## 5. Run the Data Pipeline
+Start the local Prefect server in one terminal:
 
-Run the local pipeline:
-
-```bash
-PYTHONPATH=. python -m src.orchestration
-```
-
-For a local Prefect UI:
-
-```bash
+``` bash
+source .venv/bin/activate
 prefect server start
 ```
 
-In another terminal:
+In a second terminal, from the project root:
 
-```bash
-export PREFECT_API_URL="http://127.0.0.1:4200/api"
-PYTHONPATH=. python -m src.orchestration
+``` bash
+source .venv/bin/activate
+prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
 ```
 
-The Prefect flow includes nine tasks:
+Open the Prefect interface:
 
-1. Data ingestion
-2. Data validation
-3. Data preparation
-4. Catalog processing
-5. Exploratory data analysis
-6. Feature engineering
-7. Data lineage snapshot
-8. Model training
-9. DuckDB warehouse creation
+<http://127.0.0.1:4200>
 
-The flow has been successfully executed and verified.
+The demonstrated end-to-end flow is named:
 
-## 6. DuckDB Analytical Warehouse
+`recomart-retailrocket-end-to-end`
 
-The analytical warehouse is stored locally at:
+The flow contains nine main tasks covering ingestion, validation,
+preparation, catalog processing, EDA, feature generation,
+versioning/lineage, model training, and DuckDB integration.
 
-```text
+The demonstrated setup uses a locally started Prefect server. It should
+not be described as a deployed cloud orchestration service or as an
+automatically scheduled production pipeline.
+
+------------------------------------------------------------------------
+
+## 8. MLflow -- experiment tracking
+
+The project stores MLflow tracking data in a local SQLite database named
+`mlflow.db`.
+
+Start the MLflow UI from the project root:
+
+``` bash
+source .venv/bin/activate
+mlflow ui --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port 5001
+```
+
+Open:
+
+<http://127.0.0.1:5001>
+
+Select the **Default** experiment and inspect the recorded runs. The
+final run used in the report is:
+
+`d96e8139d6aa4a0fa71dfe894c463124`
+
+The MLflow UI displays recorded experiment parameters and metrics. It
+does not mean model training is currently running.
+
+If `mlflow.db` is not included in the distributed archive, the UI will
+not contain the original recorded runs until the tracking database is
+supplied or the experiment is run again. Do not substitute an older
+`mlruns/` file-store directory for the SQLite tracking database used by
+the final run.
+
+------------------------------------------------------------------------
+
+## 9. DuckDB -- analytical warehouse
+
+The project uses DuckDB as a local analytical warehouse. The
+demonstrated database path is:
+
+``` text
 database/recomart_warehouse.duckdb
 ```
 
-Build or refresh the warehouse:
+Open this file using DBeaver or another DuckDB-compatible client.
 
-```bash
-PYTHONPATH=. python -m src.warehouse
-```
+Example query to count interactions by event type:
 
-The warehouse includes:
-- `fact_interaction`
-- `feature_user`
-- `feature_item`
-- `feature_user_item`
-- `item_properties`
-- `category_tree`
-- `model_run`
-
-Example SQL:
-
-```sql
-SELECT event_type, COUNT(*) AS total
+``` sql
+SELECT
+    event_type,
+    COUNT(*) AS total_events
 FROM fact_interaction
 GROUP BY event_type
-ORDER BY total DESC;
+ORDER BY total_events DESC;
 ```
 
-The generated DuckDB database is excluded from Git because
-it is a large local analytical artifact.
+The demonstrated warehouse includes interaction, user-feature,
+item-feature, user-item-feature, item-property, category-tree, and
+model-run tables.
 
-## 7. Model and Evaluation
+The DuckDB database is a generated binary artefact and is large. Include
+it in the ZIP only if the submission size limit permits. Otherwise,
+include the SQL/schema and the instructions needed to regenerate it.
 
-The project uses TruncatedSVD collaborative filtering
-for implicit-feedback recommendation.
+------------------------------------------------------------------------
 
-Model evaluation metrics include:
-- Precision@10
-- Recall@10
-- NDCG@10
-- Sampled reconstruction RMSE
+## 10. OCI Object Storage
 
-Model metrics are stored in:
+The project uses **Oracle Cloud Infrastructure (OCI) Object Storage**.
+The demonstrated bucket is:
 
-```text
-reports/model_metrics.json
-```
+-   **Bucket:** `recomart-dmml-data`
+-   **Region:** `ap-mumbai-1`
+-   **Storage namespace:** `bmyxec10ufou`
 
-MLflow stores experiment tracking information and model run metadata.
+The DVC remote uses the S3-compatible interface to communicate with OCI
+Object Storage. This does **not** mean that the project uses Amazon S3.
 
-## 8. Evidence
+Access to the bucket is private and depends on the configured OCI
+credentials and permissions. Do not include private keys, OCI
+configuration files containing secrets, access tokens, or credentials in
+the source archive.
 
-Evidence is maintained under `reports/` and includes:
-- Data quality PDF and validation summary.
-- EDA plots and methodology.
-- Feature registry and lineage manifests.
-- Model evaluation metrics.
-- Prefect dashboard and flow execution screenshots.
-- DuckDB warehouse validation.
-- DVC metadata and OCI remote restoration evidence.
+A reviewer without access to the OCI tenancy can still inspect the
+source code and locally supplied project evidence, but cannot retrieve
+private bucket objects.
 
-Use actual execution screenshots and logs. Do not use mock evidence.
+------------------------------------------------------------------------
 
-## 9. Git Hygiene and Security
+## 11. Reports and supporting evidence
 
-Never commit:
-- `.env`
-- `.venv/`
-- OCI private keys or session tokens.
-- Kaggle credentials.
-- AWS-compatible credential files.
-- Raw CSV datasets.
-- Parquet data files.
-- Model binaries.
-- Local DuckDB databases.
-- DVC cache contents.
+The `reports/` directory contains supporting project outputs, which may
+include:
 
-Commit DVC metadata files, source code, SQL schemas,
-documentation and appropriate small evidence files.
+-   Data-quality report and validation evidence
+-   EDA reports and plots
+-   Model metrics
+-   Dataset/version manifests
+-   Architecture diagram
+-   DuckDB and MLflow screenshots
+-   Other generated pipeline evidence
 
-## 10. Deliverables
+The final academic submission report and demonstration video should be
+placed in their designated submission folders. The source ZIP may
+include technical supporting evidence, but it does not need to contain
+duplicate copies of every top-level submission document.
 
-- Source code under `src/`.
-- Utility scripts under `scripts/`.
-- SQL schema under `sql/`.
-- Architecture and methodology documentation under `docs/`.
-- Data quality, EDA and model reports under `reports/`.
-- Trained model artifact under `models/`.
-- Prefect execution evidence.
-- DVC metadata and versioned dataset in OCI.
-- Editable submission report.
-- Five-to-ten-minute demonstration video.
-- Final project ZIP.
+------------------------------------------------------------------------
 
-Complete the five-member contribution table in the submission
-report and share final deliverables through the approved
-BITS submission/Google Drive process.
+## 12. Reproducibility and packaging notes
 
-## 11. Cost and Security
+The source archive should include the code and configuration needed to
+understand and reproduce the project, while avoiding machine-specific
+and sensitive files.
 
-OCI Always Free eligibility and quotas vary by tenancy,
-region and service availability.
+### Include
 
-Use a private bucket, apply least-privilege IAM policies,
-monitor storage and request costs, and remove temporary
-resources after the demonstration.
+-   `src/`
+-   `scripts/`
+-   `sql/`
+-   `requirements.txt`
+-   `README.md`
+-   Relevant project configuration files
+-   DVC metadata required to identify tracked data
+-   `data/features/feature_registry.json`
+-   Supporting reports, metrics, manifests, plots, and screenshots
+-   The trained model and DuckDB database only if practical within the
+    submission size limit
 
-Never assume a budget alert is a hard spending cap.
+### Exclude
+
+-   `.venv/`
+-   `.git/`
+-   `__pycache__/` and `*.pyc`
+-   Temporary files, editor caches, and logs
+-   MLflow temporary or obsolete tracking directories
+-   OCI private keys, credentials, tokens, and secret configuration
+-   Local machine-specific absolute paths
+-   Large raw data files if they are separately supplied or retrievable
+    through DVC
+
+Before creating the ZIP, inspect `.gitignore` and DVC configuration to
+ensure that required source files are not accidentally omitted and that
+secrets are not included.
+
+------------------------------------------------------------------------
+
+## 13. Known implementation boundaries
+
+For an accurate description of the delivered project:
+
+-   OCI Object Storage is the cloud storage component; pipeline
+    execution and the demonstrated warehouse/model workflow are local.
+-   Prefect is demonstrated using a local server.
+-   MLflow records completed experiment runs; the UI is a tracking
+    interface, not a live training monitor.
+-   DuckDB is a local analytical warehouse; the project does not claim a
+    deployed BI dashboard.
+-   The periodic-processing script supports processing a historical
+    snapshot; it should not be described as a live streaming system or
+    an active recurring production schedule.
+-   The TruncatedSVD model and reported ranking metrics represent a
+    baseline implementation and should be evaluated accordingly.
+
+------------------------------------------------------------------------
+
+## 14. Team
+
+**DMML -- Group 1**
+
+  Name                          Student ID
+  ----------------------------- -------------
+  Sandeep Kumar Jain            2025NS04132
+  Deepa Mohan                   2025NS04095
+  Yash Gupta                    2025NS04096
+  Kothapalli Bhargava Avinash   2025NS04077
+  Mumtaz Hanif Shaikh           2025NS04082
+
+------------------------------------------------------------------------
+
+## 15. Repository
+
+GitHub repository:
+
+<https://github.com/sjainuni/dmml-assignment-oracle>
+
+For questions about the project implementation, refer first to the
+relevant modules in `src/`, execution utilities in `scripts/`, and
+warehouse definitions in `sql/`.
